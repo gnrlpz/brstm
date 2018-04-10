@@ -16,6 +16,7 @@ public class BrstmPlayer {
     static SourceDataLine waveout;
     static Stream stream = null;
     static AsyncDecoder decoder;
+    static Thread t1;
 
     public BrstmPlayer(String filename) throws Exception {
         try {
@@ -139,10 +140,21 @@ public class BrstmPlayer {
     }
 
     public static void startMusic() throws Exception {
-        decoder = new AsyncDecoder(stream);
-        decoder.start();
-        play(decoder);
-        stream.close();
+        t1 = new Thread(new Runnable(){
+        
+            @Override
+            public void run() {
+                decoder = new AsyncDecoder(stream);
+                decoder.start();
+                try {
+                    play(decoder);
+                    stream.close();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        t1.start();
     }
 
     @SuppressWarnings("deprecation")
@@ -150,5 +162,6 @@ public class BrstmPlayer {
         decoder.stop(); // deprecated, but this prevents errors when closing the stream
         stream.close();
         Thread.sleep(500); // prevent clashing with next track
+        t1.interrupt();
     }
 }
